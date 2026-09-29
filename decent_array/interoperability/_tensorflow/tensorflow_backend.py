@@ -44,6 +44,14 @@ class TensorflowBackend(Backend):
 
     # Array creation
 
+    def empty(self, shape: int | tuple[int, ...]) -> Array:
+        with tf.device(self._native_device):
+            return Array(tf.experimental.numpy.empty(shape))
+
+    def empty_like(self, x: Array, /) -> Array:
+        with tf.device(self._native_device):
+            return Array(tf.experimental.numpy.empty_like(x.value))
+
     def zeros(self, shape: int | tuple[int, ...]) -> Array:
         with tf.device(self._native_device):
             return Array(tf.zeros(shape))
@@ -58,9 +66,25 @@ class TensorflowBackend(Backend):
     def ones_like(self, x: Array) -> Array:
         return Array(tf.ones_like(x.value))
 
-    def eye(self, n: int) -> Array:
+    def eye(self, n_rows: int, n_cols: int | None = None, /, *, k: int = 0) -> Array:
         with tf.device(self._native_device):
-            return Array(tf.eye(n))
+            return Array(tf.experimental.numpy.eye(n_rows, n_cols, k=k))
+
+    def arange(self, start: int | float, /, stop: int | float | None = None, step: int | float = 1) -> Array:
+        with tf.device(self._native_device):
+            return Array(tf.experimental.numpy.arange(start, stop, step))
+
+    def linspace(
+        self,
+        start: int | float | complex,
+        stop: int | float | complex,
+        /,
+        num: int,
+        *,
+        endpoint: bool = True,
+    ) -> Array:
+        with tf.device(self._native_device):
+            return Array(tf.experimental.numpy.linspace(start, stop, num=num, endpoint=endpoint))
 
     def device_to_native(self, device: Devices) -> str:
         if device in {Devices.CPU, Devices.GPU}:
@@ -197,6 +221,15 @@ class TensorflowBackend(Backend):
         axis = axis if axis is not None else (-2, -1) if v.ndim == 2 else None
         return Array(tf.norm(v, ord=ord, axis=axis, keepdims=keepdims))
 
+    def solve(self, x1: Array, x2: Array) -> Array:
+        rhs = x2.value
+        if rhs.shape.rank == x1.value.shape.rank - 1:
+            return Array(tf.squeeze(tf.linalg.solve(x1.value, tf.expand_dims(rhs, axis=-1)), axis=-1))
+        return Array(tf.linalg.solve(x1.value, rhs))
+
+    def eigvalsh(self, x: Array) -> Array:
+        return Array(tf.linalg.eigvalsh(x.value))
+
     # Math reductions
 
     def sum(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
@@ -278,6 +311,20 @@ class TensorflowBackend(Backend):
 
     def sqrt(self, x: Array) -> Array:
         return Array(tf.sqrt(x.value))
+
+    def exp(self, x: Array) -> Array:
+        return Array(tf.exp(x.value))
+
+    def logaddexp(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        return Array(tf.keras.ops.logaddexp(unwrap(x1), unwrap(x2)))
+
+    def where(
+        self,
+        condition: Array,
+        x1: bool | int | float | complex | Array,
+        x2: bool | int | float | complex | Array,
+    ) -> Array:
+        return Array(tf.where(condition.value, unwrap(x1), unwrap(x2)))
 
     def isfinite(self, x: Array) -> Array:
         """Element-wise test for finite values."""

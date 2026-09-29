@@ -33,6 +33,12 @@ class PyTorchBackend(Backend):
 
     # Array creation
 
+    def empty(self, shape: int | tuple[int, ...]) -> Array:
+        return Array(torch.empty(shape, device=self._native_device))
+
+    def empty_like(self, x: Array, /) -> Array:
+        return Array(torch.empty_like(x.value))
+
     def zeros(self, shape: int | tuple[int, ...]) -> Array:
         return Array(torch.zeros(shape, device=self._native_device))
 
@@ -45,8 +51,40 @@ class PyTorchBackend(Backend):
     def ones_like(self, x: Array) -> Array:
         return Array(torch.ones_like(x.value))
 
-    def eye(self, n: int) -> Array:
-        return Array(torch.eye(n, device=self._native_device))
+    def eye(self, n_rows: int, n_cols: int | None = None, /, *, k: int = 0) -> Array:
+        columns = n_rows if n_cols is None else n_cols
+        result = torch.zeros((n_rows, columns), device=self._native_device)
+        if k >= 0:
+            length = min(n_rows, columns - k)
+            if length > 0:
+                indices = torch.arange(length, device=self._native_device)
+                result[indices, indices + k] = 1
+        else:
+            length = min(n_rows + k, columns)
+            if length > 0:
+                indices = torch.arange(length, device=self._native_device)
+                result[indices - k, indices] = 1
+        return Array(result)
+
+    def arange(self, start: int | float, /, stop: int | float | None = None, step: int | float = 1) -> Array:
+        if stop is None:
+            return Array(torch.arange(start, device=self._native_device))
+        return Array(torch.arange(start, stop, step, device=self._native_device))
+
+    def linspace(
+        self,
+        start: int | float | complex,
+        stop: int | float | complex,
+        /,
+        num: int,
+        *,
+        endpoint: bool = True,
+    ) -> Array:
+        if endpoint:
+            return Array(torch.linspace(start, stop, num, device=self._native_device))
+        if num == 0:
+            return Array(torch.empty(0, device=self._native_device))
+        return Array(torch.linspace(start, stop, num + 1, device=self._native_device)[:-1])
 
     def device_to_native(self, device: Devices) -> str:
         if device == Devices.CPU:
@@ -176,6 +214,16 @@ class PyTorchBackend(Backend):
     ) -> Array:
         return Array(torch.linalg.norm(x.value, ord=ord, axis=axis, keepdim=keepdims))
 
+    def solve(self, x1: Array, x2: Array) -> Array:
+        if x1.value.device.type == "mps":
+            return Array(torch.linalg.solve(x1.value.cpu(), x2.value.cpu()).to(x1.value.device))
+        return Array(torch.linalg.solve(x1.value, x2.value))
+
+    def eigvalsh(self, x: Array) -> Array:
+        if x.value.device.type == "mps":
+            return Array(torch.linalg.eigvalsh(x.value.cpu()).to(x.value.device))
+        return Array(torch.linalg.eigvalsh(x.value))
+
     # Math reductions
 
     def sum(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
@@ -268,6 +316,20 @@ class PyTorchBackend(Backend):
 
     def sqrt(self, x: Array) -> Array:
         return Array(torch.sqrt(x.value))
+
+    def exp(self, x: Array) -> Array:
+        return Array(torch.exp(x.value))
+
+    def logaddexp(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        return Array(torch.logaddexp(unwrap(x1), unwrap(x2)))
+
+    def where(
+        self,
+        condition: Array,
+        x1: bool | int | float | complex | Array,
+        x2: bool | int | float | complex | Array,
+    ) -> Array:
+        return Array(torch.where(condition.value, unwrap(x1), unwrap(x2)))
 
     def isfinite(self, x: Array) -> Array:
         """Element-wise test for finite values."""

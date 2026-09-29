@@ -42,9 +42,108 @@ def test_ones_like(backend: tuple) -> None:
     np.testing.assert_allclose(_np(arr), np.ones((2, 3)))
 
 
+def test_empty(backend: tuple) -> None:
+    arr = iop.empty((2, 3))
+    assert iop.shape(arr) == (2, 3)
+
+
+def test_empty_scalar_shape(backend: tuple) -> None:
+    arr = iop.empty(4)
+    assert iop.shape(arr) == (4,)
+
+
+def test_empty_like(backend: tuple) -> None:
+    src = iop.from_numpy(np.ones((2, 3), dtype=np.float32))
+    arr = iop.empty_like(src)
+    assert iop.shape(arr) == iop.shape(src)
+    assert arr.dtype == src.dtype
+
+
 def test_eye(backend: tuple) -> None:
     arr = iop.eye(3)
     np.testing.assert_allclose(_np(arr), np.eye(3))
+
+
+def test_eye_rectangular(backend: tuple) -> None:
+    np.testing.assert_allclose(_np(iop.eye(2, 4)), np.eye(2, 4))
+
+
+def test_eye_positive_offset(backend: tuple) -> None:
+    np.testing.assert_allclose(_np(iop.eye(3, 4, k=1)), np.eye(3, 4, k=1))
+
+
+def test_eye_negative_offset(backend: tuple) -> None:
+    np.testing.assert_allclose(_np(iop.eye(4, 3, k=-1)), np.eye(4, 3, k=-1))
+
+
+def test_arange(backend: tuple) -> None:
+    np.testing.assert_array_equal(_np(iop.arange(5)), np.arange(5))
+
+
+def test_arange_start_stop_step(backend: tuple) -> None:
+    np.testing.assert_array_equal(_np(iop.arange(1, 8, 2)), np.arange(1, 8, 2))
+
+
+def test_arange_negative_step(backend: tuple) -> None:
+    np.testing.assert_array_equal(_np(iop.arange(5, 0, -2)), np.arange(5, 0, -2))
+
+
+def test_arange_float(backend: tuple) -> None:
+    np.testing.assert_allclose(_np(iop.arange(0.0, 1.0, 0.25)), np.arange(0.0, 1.0, 0.25))
+
+
+def test_linspace(backend: tuple) -> None:
+    np.testing.assert_allclose(_np(iop.linspace(0.0, 1.0, 5)), np.linspace(0.0, 1.0, 5))
+
+
+def test_linspace_without_endpoint(backend: tuple) -> None:
+    np.testing.assert_allclose(_np(iop.linspace(0.0, 1.0, 5, endpoint=False)), np.linspace(0.0, 1.0, 5, endpoint=False))
+
+
+def test_linspace_zero_samples(backend: tuple) -> None:
+    assert iop.shape(iop.linspace(0.0, 1.0, 0)) == (0,)
+
+
+def test_exp(backend: tuple) -> None:
+    arr = iop.exp(iop.from_numpy(np.array([-2.0, 0.0, 2.0], dtype=np.float32)))
+    np.testing.assert_allclose(_np(arr), np.exp([-2.0, 0.0, 2.0]))
+
+
+def test_where_arrays_and_broadcasting(backend: tuple) -> None:
+    condition = iop.from_numpy(np.array([[True], [False]], dtype=np.bool_))
+    x1 = iop.from_numpy(np.array([1.0, 2.0, 3.0], dtype=np.float32))
+    x2 = iop.from_numpy(np.array([4.0, 5.0, 6.0], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.where(condition, x1, x2)), [[1, 2, 3], [4, 5, 6]])
+
+
+def test_where_scalar_and_array_operands(backend: tuple) -> None:
+    condition = iop.from_numpy(np.array([True, False], dtype=np.bool_))
+    x = iop.from_numpy(np.array([1.0, 2.0], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.where(condition, x, 0.0)), [1.0, 0.0])
+    np.testing.assert_array_equal(_np(iop.where(condition, -1.0, x)), [-1.0, 2.0])
+
+
+def test_logaddexp_is_stable(backend: tuple) -> None:
+    values = iop.from_numpy(np.array([1000.0, -1000.0], dtype=np.float32))
+    result = iop.logaddexp(values, values)
+    np.testing.assert_allclose(_np(result), [1000.0 + np.log(2.0), -1000.0 + np.log(2.0)])
+
+
+def test_logaddexp_infinities(backend: tuple) -> None:
+    values = iop.from_numpy(np.array([np.inf, -np.inf], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.logaddexp(values, values)), [np.inf, -np.inf])
+
+
+def test_solve_known_system(backend: tuple) -> None:
+    matrix = iop.from_numpy(np.array([[3.0, 1.0], [1.0, 2.0]], dtype=np.float32))
+    rhs = iop.from_numpy(np.array([9.0, 8.0], dtype=np.float32))
+    solution = iop.solve(matrix, rhs)
+    np.testing.assert_allclose(_np(iop.matmul(matrix, solution)), _np(rhs), rtol=1e-5, atol=1e-5)
+
+
+def test_eigvalsh_known_symmetric_matrix(backend: tuple) -> None:
+    matrix = iop.from_numpy(np.array([[2.0, 1.0], [1.0, 2.0]], dtype=np.float32))
+    np.testing.assert_allclose(_np(iop.eigvalsh(matrix)), [1.0, 3.0], rtol=1e-5, atol=1e-5)
 
 
 def test_device_to_native(backend: tuple) -> None:
@@ -61,6 +160,7 @@ def test_device_of(backend: tuple) -> None:
 
 
 # Array manipulation -----------------------------------------------------
+
 
 def test_asarray_existing_array_is_identity(backend: tuple) -> None:
     arr = Array(4)

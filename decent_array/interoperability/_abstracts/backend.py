@@ -43,6 +43,14 @@ class Backend(ABC):
     # Array creation ------------------------------------------------------
 
     @abstractmethod
+    def empty(self, shape: int | tuple[int, ...]) -> Array:
+        """Create an uninitialized array with the given shape."""
+
+    @abstractmethod
+    def empty_like(self, x: Array, /) -> Array:
+        """Create an uninitialized array with the same shape as ``x``."""
+
+    @abstractmethod
     def zeros(self, shape: int | tuple[int, ...]) -> Array:
         """Create an array of zeros with the given shape."""
 
@@ -59,8 +67,24 @@ class Backend(ABC):
         """Create an array of ones matching the shape and type of ``x``."""
 
     @abstractmethod
-    def eye(self, n: int) -> Array:
-        """Create an ``n x n`` identity matrix."""
+    def eye(self, n_rows: int, n_cols: int | None = None, /, *, k: int = 0) -> Array:
+        """Create a two-dimensional array with ones on the diagonal at offset ``k``."""
+
+    @abstractmethod
+    def arange(self, start: int | float, /, stop: int | float | None = None, step: int | float = 1) -> Array:
+        """Return evenly spaced values within a half-open interval."""
+
+    @abstractmethod
+    def linspace(
+        self,
+        start: int | float | complex,
+        stop: int | float | complex,
+        /,
+        num: int,
+        *,
+        endpoint: bool = True,
+    ) -> Array:
+        """Return evenly spaced numbers over a specified interval."""
 
     @abstractmethod
     def device_to_native(self, device: Devices) -> Any:  # noqa: ANN401
@@ -186,6 +210,14 @@ class Backend(ABC):
     ) -> Array:
         """Compute the norm of ``x``."""
 
+    @abstractmethod
+    def solve(self, x1: Array, x2: Array) -> Array:
+        """Solve the linear system ``x1 @ solution = x2``."""
+
+    @abstractmethod
+    def eigvalsh(self, x: Array) -> Array:
+        """Return eigenvalues of a symmetric/Hermitian matrix."""
+
     # Math reductions -----------------------------------------------------
 
     @abstractmethod
@@ -283,6 +315,23 @@ class Backend(ABC):
     @abstractmethod
     def sqrt(self, x: Array) -> Array:
         """Element-wise square root."""
+
+    @abstractmethod
+    def exp(self, x: Array) -> Array:
+        """Element-wise exponential."""
+
+    @abstractmethod
+    def logaddexp(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        """Element-wise log(exp(x1) + exp(x2)) computed stably."""
+
+    @abstractmethod
+    def where(
+        self,
+        condition: Array,
+        x1: bool | int | float | complex | Array,
+        x2: bool | int | float | complex | Array,
+    ) -> Array:
+        """Select elements from ``x1`` or ``x2`` according to ``condition``."""
 
     @abstractmethod
     def isfinite(self, x: Array) -> Array:
