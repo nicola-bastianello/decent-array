@@ -48,8 +48,10 @@ from ._iop.math import (
     abs,  # noqa: A004
     absolute,
     add,
+    ceil,
     divide,
     exp,
+    floor,
     floor_divide,
     isfinite,
     isinf,
@@ -60,6 +62,7 @@ from ._iop.math import (
     positive,
     pow,  # noqa: A004
     remainder,
+    round,  # noqa: A004
     sqrt,
     subtract,
     where,
@@ -98,6 +101,7 @@ __all__ = [
     "bitwise_or",
     "bitwise_right_shift",
     "bitwise_xor",
+    "ceil",
     "choice",
     "copy",
     "default_device",
@@ -114,6 +118,7 @@ __all__ = [
     "exp",
     "expand_dims",
     "eye",
+    "floor",
     "floor_divide",
     "from_numpy",
     "from_numpy_like",
@@ -148,6 +153,7 @@ __all__ = [
     "pow",
     "remainder",
     "reshape",
+    "round",
     "set_backend",
     "set_rng_state",
     "set_seed",

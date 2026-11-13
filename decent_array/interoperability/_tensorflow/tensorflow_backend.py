@@ -29,7 +29,7 @@ from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayLike, ArrayTypes, Devices, Frameworks
-from decent_array.types._dtypes import dtype
+from decent_array.types._dtypes import dtype, dtypes
 
 
 class TensorflowBackend(Backend):
@@ -308,6 +308,32 @@ class TensorflowBackend(Backend):
 
     def absolute(self, x: Array) -> Array:
         return Array(tf.abs(x.value))
+
+    def round(self, x: Array) -> Array:
+        if x.dtype.name in dtypes(kind="integral"):
+            return x
+
+        if x.dtype.name in dtypes(kind="complex floating"):
+            value = tf.complex(
+                tf.math.rint(tf.math.real(x.value)),
+                tf.math.rint(tf.math.imag(x.value)),
+            )
+        else:
+            value = tf.math.rint(x.value)
+
+        return Array(value)
+
+    def floor(self, x: Array) -> Array:
+        if x.dtype.name in dtypes(kind="integral"):
+            return x
+
+        return Array(tf.math.floor(x.value))
+
+    def ceil(self, x: Array) -> Array:
+        if x.dtype.name in dtypes(kind="integral"):
+            return x
+
+        return Array(tf.math.ceil(x.value))
 
     def sqrt(self, x: Array) -> Array:
         return Array(tf.sqrt(x.value))

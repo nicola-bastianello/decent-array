@@ -142,6 +142,27 @@ def abs(x: Array) -> Array:  # noqa: A001
     return _BACKEND_INSTANCE.absolute(x)
 
 
+def round(x: Array) -> Array:  # noqa: A001
+    """Round each element to the nearest integer."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.round(x)
+
+
+def floor(x: Array) -> Array:
+    """Round each element toward negative infinity."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.floor(x)
+
+
+def ceil(x: Array) -> Array:
+    """Round each element toward positive infinity."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.ceil(x)
+
+
 def sqrt(x: Array) -> Array:
     """Element-wise square root."""
     if _BACKEND_INSTANCE is None:

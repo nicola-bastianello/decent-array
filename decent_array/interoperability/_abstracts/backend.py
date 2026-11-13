@@ -313,6 +313,18 @@ class Backend(ABC):
         """Element-wise absolute value."""
 
     @abstractmethod
+    def round(self, x: Array) -> Array:
+        """Round each element to the nearest integer."""
+
+    @abstractmethod
+    def floor(self, x: Array) -> Array:
+        """Round each element toward negative infinity."""
+
+    @abstractmethod
+    def ceil(self, x: Array) -> Array:
+        """Round each element toward positive infinity."""
+
+    @abstractmethod
     def sqrt(self, x: Array) -> Array:
         """Element-wise square root."""
 

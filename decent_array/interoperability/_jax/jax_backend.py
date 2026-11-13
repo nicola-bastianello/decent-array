@@ -31,7 +31,7 @@ from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayLike, ArrayTypes, Devices, Frameworks
-from decent_array.types._dtypes import dtype
+from decent_array.types._dtypes import dtype, dtypes
 
 
 class JaxBackend(Backend):
@@ -278,6 +278,29 @@ class JaxBackend(Backend):
 
     def absolute(self, x: Array) -> Array:
         return Array(jnp.abs(x.value))
+
+    def round(self, x: Array) -> Array:
+        if x.dtype.name in dtypes(kind="integral"):
+            return x
+
+        if x.dtype.name in dtypes(kind="complex floating"):
+            value = jnp.round(jnp.real(x.value)) + 1j * jnp.round(jnp.imag(x.value))
+        else:
+            value = jnp.round(x.value)
+
+        return Array(value)
+
+    def floor(self, x: Array) -> Array:
+        if x.dtype.name in dtypes(kind="integral"):
+            return x
+
+        return Array(jnp.floor(x.value))
+
+    def ceil(self, x: Array) -> Array:
+        if x.dtype.name in dtypes(kind="integral"):
+            return x
+
+        return Array(jnp.ceil(x.value))
 
     def sqrt(self, x: Array) -> Array:
         return Array(jnp.sqrt(x.value))

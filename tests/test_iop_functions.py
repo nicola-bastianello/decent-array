@@ -646,6 +646,85 @@ def test_absolute(backend: tuple) -> None:
     np.testing.assert_allclose(_np(iop.absolute(arr)), [1.0, 2.0, 3.0])
 
 
+def test_round_ties_to_even(backend: tuple) -> None:
+    x = iop.asarray(
+        np.array([1.5, 2.5, 3.5, -1.5, -2.5, -3.5], dtype=np.float32)
+    )
+
+    result = iop.round(x)
+
+    np.testing.assert_array_equal(
+        _np(result),
+        [2.0, 2.0, 4.0, -2.0, -2.0, -4.0],
+    )
+
+
+def test_round_preserves_dtype(backend: tuple) -> None:
+    x = iop.asarray(np.array([1.5, 2.5], dtype=np.float32))
+
+    assert iop.round(x).dtype == x.dtype
+
+
+def test_round_complex(backend: tuple) -> None:
+    x = iop.asarray(
+        np.array([1.5 + 2.5j, 2.5 - 3.5j], dtype=np.complex64)
+    )
+
+    result = iop.round(x)
+
+    np.testing.assert_array_equal(
+        _np(result),
+        [2.0 + 2.0j, 2.0 - 4.0j],
+    )
+    assert result.dtype == x.dtype
+
+
+def test_round_integer(backend: tuple) -> None:
+    x = iop.asarray(np.array([-2, 0, 3], dtype=np.int32))
+
+    assert iop.round(x) is x
+
+
+def test_floor(backend: tuple) -> None:
+    x = iop.asarray(
+        np.array([-2.7, -2.0, -0.3, 0.3, 2.7], dtype=np.float32)
+    )
+
+    result = iop.floor(x)
+
+    np.testing.assert_array_equal(
+        _np(result),
+        [-3.0, -2.0, -1.0, 0.0, 2.0],
+    )
+    assert result.dtype == x.dtype
+
+
+def test_floor_integer(backend: tuple) -> None:
+    x = iop.asarray(np.array([-2, 0, 3], dtype=np.int32))
+
+    assert iop.floor(x) is x
+
+
+def test_ceil(backend: tuple) -> None:
+    x = iop.asarray(
+        np.array([-2.7, -2.0, -0.3, 0.3, 2.7], dtype=np.float32)
+    )
+
+    result = iop.ceil(x)
+
+    np.testing.assert_array_equal(
+        _np(result),
+        [-2.0, -2.0, 0.0, 1.0, 3.0],
+    )
+    assert result.dtype == x.dtype
+
+
+def test_ceil_integer(backend: tuple) -> None:
+    x = iop.asarray(np.array([-2, 0, 3], dtype=np.int32))
+
+    assert iop.ceil(x) is x
+
+
 def test_sqrt(backend: tuple) -> None:
     arr = iop.from_numpy(np.array([1.0, 4.0, 9.0], dtype=np.float32))
     np.testing.assert_allclose(_np(iop.sqrt(arr)), [1.0, 2.0, 3.0])

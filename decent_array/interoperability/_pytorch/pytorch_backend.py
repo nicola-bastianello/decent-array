@@ -20,7 +20,7 @@ from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayLike, ArrayTypes, Devices, Frameworks
-from decent_array.types._dtypes import dtype
+from decent_array.types._dtypes import dtype, dtypes
 
 
 class PyTorchBackend(Backend):
@@ -313,6 +313,32 @@ class PyTorchBackend(Backend):
 
     def absolute(self, x: Array) -> Array:
         return Array(torch.abs(x.value))
+
+    def round(self, x: Array) -> Array:
+        if x.dtype.name in dtypes(kind="integral"):
+            return x
+
+        if x.dtype.name in dtypes(kind="complex floating"):
+            value = torch.complex(
+                torch.round(torch.real(x.value)),
+                torch.round(torch.imag(x.value)),
+            )
+        else:
+            value = torch.round(x.value)
+
+        return Array(value)
+
+    def floor(self, x: Array) -> Array:
+        if x.dtype.name in dtypes(kind="integral"):
+            return x
+
+        return Array(torch.floor(x.value))
+
+    def ceil(self, x: Array) -> Array:
+        if x.dtype.name in dtypes(kind="integral"):
+            return x
+
+        return Array(torch.ceil(x.value))
 
     def sqrt(self, x: Array) -> Array:
         return Array(torch.sqrt(x.value))
